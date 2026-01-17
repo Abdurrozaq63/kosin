@@ -19,3 +19,48 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.sidebar {
+  top: 0;
+  width: 280px;
+  min-height: 100vh;
+  max-height: 100vh;
+  position: relative;
+}
+.navbar {
+  height: 52px;
+  background-color: #d2e603;
+  color: #272829;
+}
+.dash_inf {
+  width: 130px;
+  height: 130px;
+}
+.btn-logout {
+  color: #272829;
+}
+.bg-custom-dark {
+  background-color: #29132f;
+}
+
+.shadow-cust {
+  box-shadow: 2px 2px 6px rgb(76 29 149 / var(--tw-border-opacity, 1));
+}
+.colorblue {
+  background-color: #03aec6;
+}
+.darkblue {
+  background-color: #01294d;
+}
+.WHITE {
+  background-color: #fdfdfd;
+}
+.yellow {
+  background-color: #d2e603;
+}
+.darkyellow {
+  background-color: #272829;
+}
+.WHITE-YELLOW {
+  background-color: #f1efef;
+}

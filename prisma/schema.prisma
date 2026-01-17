@@ -1,0 +1,104 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id_admin String @id @default(uuid())
+  email    String @unique
+  password String
+}
+
+model Kos {
+  id_kos    String   @id @default(uuid())
+  nama_kos  String
+  notelp    String
+  alamat    String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  tipeKos Tipe_kos[] // Relasi: satu kos bisa punya banyak tipe kos
+}
+
+model Tipe_kos {
+  id_tipe         String   @id @default(uuid())
+  id_kos          String
+  nama_tipe       String
+  jenis_kos       String
+  harga           Int
+  jarak           Int
+  luas_kamar      String
+  fasilitas_kamar Json
+  fasilitas_umum  Json
+  keamanan        Json
+  jam_malam       String
+  jmlh_kamar      Int
+  kmr_terisi      Int
+  createdAt       DateTime @default(now())
+
+  kos     Kos            @relation(fields: [id_kos], references: [id_kos], onDelete: Cascade)
+  riwayat Riwayat_user[]
+  simpan  Simpan[]
+}
+
+model User {
+  id_user   String   @id @default(uuid())
+  nama      String?
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  riwayatPreferensi Riwayat_preferensi[]
+  riwayatKunjungan  Riwayat_user[]
+  simpanKos         Simpan[]
+}
+
+model Riwayat_preferensi {
+  id_preferensi   String   @id @default(uuid())
+  id_user         String
+  harga           Int
+  jarak           Int
+  luas_kamar      Int
+  fasilitas_kamar String
+  fasilitas_umum  String
+  keamanan        String
+  jenis_kos       String
+  createdAt       DateTime @default(now())
+
+  user User @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+}
+
+model Riwayat_user {
+  id_riwayat String   @id @default(uuid())
+  id_user    String
+  id_tipe    String
+  createdAt  DateTime @default(now())
+
+  user    User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  tipeKos Tipe_kos @relation(fields: [id_tipe], references: [id_tipe], onDelete: Cascade)
+}
+
+model Simpan {
+  id_simpan String   @id @default(uuid())
+  id_tipe   String
+  id_user   String
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [id_user], references: [id_user], onDelete: Cascade)
+  tipeKos Tipe_kos @relation(fields: [id_tipe], references: [id_tipe], onDelete: Cascade)
+}
+
+model Pengajuan {
+  id_pengajuan String   @id @default(uuid())
+  nama_kos     String
+  notelp       String
+  alamat       String
+  email        String
+  status       String
+  createdAt    DateTime @default(now())
+}
