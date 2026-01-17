@@ -1,7 +1,7 @@
 // ClientWrapper.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useIdStore, useTipeKos, useKos, useRole } from '@/store/useDataStore';
 
 export default function ClientWrapper({
@@ -10,8 +10,8 @@ export default function ClientWrapper({
   children: React.ReactNode;
 }) {
   const { idStore, setIdStore } = useIdStore();
-  const { TipeKosStore, fetchTipeKoss } = useTipeKos();
-  const { KosStore, fetchKoss } = useKos();
+  const { fetchTipeKoss } = useTipeKos();
+  const { fetchKoss } = useKos();
   const { setRole } = useRole();
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId } from 'react';
+import { useEffect } from 'react';
 import { useSavedTipes, SavedTipe, useIdStore } from '@/store/useDataStore';
 
 export default function ClientWrappMain({
@@ -8,9 +8,8 @@ export default function ClientWrappMain({
 }: {
   children: React.ReactNode;
 }) {
-  const { savedTipes, addSavedTipe, removeSavedTipe, setAllSavedTipes } =
-    useSavedTipes();
-  const { idStore, setIdStore } = useIdStore();
+  const { setAllSavedTipes } = useSavedTipes();
+  const { idStore } = useIdStore();
 
   useEffect(() => {
     if (!idStore) return;

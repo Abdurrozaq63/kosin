@@ -4,6 +4,7 @@ import { Eye, EyeOff, Edit3, Save, X } from 'lucide-react';
 import { useIdStore } from '@/store/useDataStore';
 
 type User = {
+  [x: string]: string;
   nama_kos: string;
   notelp: string;
   alamat: string;
@@ -25,17 +26,20 @@ export default function ProfilPage() {
   });
 
   useEffect(() => {
-    // Fetch data user (dummy sementara, ganti dengan fetch API Anda)
     if (!idStore) return;
     const fetchUser = async () => {
       const res = await fetch('/api/kos');
-      const data = await res.json();
-      const filtUser = await data.find((item: any) => item.id_kos === idStore);
+      const data: User[] = await res.json();
+
+      // pakai tipe User, jangan any
+      const filtUser = data.find((item: User) => item.id_kos === idStore);
 
       console.log('filter user', filtUser);
       console.log('id user', idStore);
-      setUser(filtUser);
-      setForm(filtUser);
+      if (filtUser) {
+        setUser(filtUser);
+        setForm(filtUser);
+      }
     };
     fetchUser();
   }, [idStore]);

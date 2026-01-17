@@ -46,7 +46,7 @@ export async function POST(req: Request) {
       message: 'Kos Telah Sukses didaftarkan',
       newKos,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: 'Pendaftaran kos gagal' },
       { status: 500 }

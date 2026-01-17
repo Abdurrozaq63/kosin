@@ -9,7 +9,7 @@ export async function GET() {
 }
 
 //POST: menambah daftar kos baru
-export async function POST(req: Request, res: Response) {
+export async function POST(req: Request) {
   const {
     id_kos,
     nama_tipe,

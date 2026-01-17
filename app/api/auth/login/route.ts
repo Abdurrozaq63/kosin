@@ -11,8 +11,6 @@ export async function POST(req: NextRequest) {
   const admin = await prisma.admin.findUnique({ where: { email } });
 
   if (admin && bcrypt.compareSync(password, admin.password)) {
-    const sims = bcrypt.compareSync(password, admin.password);
-
     return NextResponse.json({
       status: 'success',
       user: { id: admin.id_admin, email: admin.email, role: 'admin' },

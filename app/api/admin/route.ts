@@ -30,7 +30,7 @@ export async function POST(req: Request) {
       message: 'admin registered succcessfully',
       admin,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'registration failed' }, { status: 500 });
   }
 }

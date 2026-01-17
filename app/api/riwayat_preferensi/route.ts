@@ -1,17 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-
-//GET: mengambil data riwayat
-export async function GET() {
-  //lanjut nanti
-  const preferensiWithUser = await prisma.riwayat_preferensi.findMany({
-    include: {
-      user: true,
-    },
-  });
-}
 
 //POST: menambahkan riwayat baru
 export async function POST(req: Request) {

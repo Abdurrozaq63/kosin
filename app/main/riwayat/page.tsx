@@ -1,28 +1,45 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import { useIdStore } from '@/store/useDataStore';
 import { Clock } from 'lucide-react';
 import Modal from '@/app/kos/component/modal';
 import Detail from '../component/detail';
 
+// ✅ tipe data untuk riwayat
+type RiwayatItem = {
+  id_riwayat: string;
+  createdAt: string; // ISO string
+  id_tipe: string;
+  tipeKos: {
+    id_tipe: string;
+    nama_tipe: string;
+    kos: {
+      id_kos: string;
+      nama_kos: string;
+    };
+  };
+};
+
 export default function RiwayatPage() {
-  const [riwayat, setRiwayat] = useState([]);
+  const [riwayat, setRiwayat] = useState<RiwayatItem[]>([]);
   const { idStore } = useIdStore();
   const [selectedId_Tipe, setSelectedId_Tipe] = useState<string | null>(null);
   const [openModal, setOpenModal] = useState<null | 'detail'>(null);
 
   useEffect(() => {
+    if (!idStore) return; // ✅ tambahkan pengecekan
     const fetchRiwayat = async () => {
       const res = await fetch('/api/riwayat_user/relasi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id_user: idStore }),
       });
-      const data = await res.json();
+      const data: RiwayatItem[] = await res.json(); // ✅ tipe jelas
       setRiwayat(data);
     };
     fetchRiwayat();
-  }, []);
+  }, [idStore]); // ✅ tambahkan idStore ke dependency
 
   const handleDetail = (id_tipe: string) => {
     setSelectedId_Tipe(id_tipe);
@@ -43,7 +60,7 @@ export default function RiwayatPage() {
         <div key={tanggal} className="space-y-4 ">
           <h2 className="text-xl font-semibold text-blue-600">{tanggal}</h2>
           <div className="grid gap-4">
-            {grouped[tanggal].map((item: any) => (
+            {grouped[tanggal].map((item) => (
               <div
                 key={item.id_riwayat}
                 className="flex justify-between items-center rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow bg-white">
@@ -73,6 +90,7 @@ export default function RiwayatPage() {
           </div>
         </div>
       ))}
+
       <Modal isOpen={openModal !== null} onClose={handleClose}>
         {openModal === 'detail' && (
           <div>
@@ -85,13 +103,13 @@ export default function RiwayatPage() {
   );
 }
 
-// Helper di file yang sama
-function groupByDate(riwayat: any[]) {
+// Helper
+function groupByDate(riwayat: RiwayatItem[]) {
   const today = new Date();
   const yesterday = new Date();
   yesterday.setDate(today.getDate() - 1);
 
-  return riwayat.reduce((acc, item) => {
+  return riwayat.reduce((acc: Record<string, RiwayatItem[]>, item) => {
     const date = new Date(item.createdAt);
     const dateOnly = date.toLocaleDateString('id-ID', {
       day: 'numeric',
@@ -111,5 +129,5 @@ function groupByDate(riwayat: any[]) {
     }
 
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {} as Record<string, RiwayatItem[]>);
 }

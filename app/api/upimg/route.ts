@@ -21,7 +21,6 @@ export async function POST(req: Request) {
   }
 
   const filename = file.name;
-  const ext = mime.extension(file.type) || 'png'; // Mendapatkan ekstensi dari MIME type
   const filePath = path.resolve('.', 'uploads', `${filename}`);
 
   // Menyimpan file

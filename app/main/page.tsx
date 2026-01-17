@@ -1,6 +1,6 @@
 'use client';
-import { useRouter } from 'next/navigation';
-import React, { FormEventHandler, useEffect, useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import {
   useTipeKos,
   useKos,
@@ -10,7 +10,7 @@ import {
 } from '@/store/useDataStore';
 import Modal from '../kos/component/modal';
 import Detail from './component/detail';
-import { MapIcon, MapMinus, MapPin } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 
 const kepentinganOptions = [
   'Sangat Penting',
@@ -18,28 +18,50 @@ const kepentinganOptions = [
   'Sedang',
   'Tidak Penting',
   'Sangat Tidak Penting',
-];
+] as const;
 
-const jenisKosOptions = ['putra', 'putri', 'semua'];
+const jenisKosOptions = ['putra', 'putri', 'semua'] as const;
+
+type Fasilitas = Record<string, boolean>;
+
+type TipeKos = {
+  id_tipe: string;
+  id_kos: string;
+  nama_tipe: string;
+  jenis_kos: string;
+  harga: number;
+  jarak: number;
+  luas_kamar: string;
+  jam_malam: string;
+  jmlh_kamar: number;
+  kmr_terisi: number;
+  status: string;
+  fasilitas_kamar: Fasilitas;
+  fasilitas_umum: Fasilitas;
+  keamanan: Fasilitas;
+};
+
+type Preferensi = {
+  harga: (typeof kepentinganOptions)[number] | '';
+  jarak: (typeof kepentinganOptions)[number] | '';
+  luas_kamar: (typeof kepentinganOptions)[number] | '';
+  fasilitas_kamar: (typeof kepentinganOptions)[number] | '';
+  fasilitas_umum: (typeof kepentinganOptions)[number] | '';
+  keamanan: (typeof kepentinganOptions)[number] | '';
+  jenis_kos: (typeof jenisKosOptions)[number] | '';
+};
 
 export default function Main() {
-  const router = useRouter();
   const { TipeKosStore, fetchTipeKoss } = useTipeKos();
   const { idStore } = useIdStore();
   const { KosStore, fetchKoss } = useKos();
-  const {
-    savedTipes,
-    addSavedTipe,
-    removeSavedTipe,
-    setAllSavedTipes,
-    isTipeSaved,
-  } = useSavedTipes();
+  const { savedTipes, addSavedTipe, removeSavedTipe, setAllSavedTipes } =
+    useSavedTipes();
+
   const [selectedId_Tipe, setSelectedId_Tipe] = useState<string | null>(null);
-
   const [isOpen, setIsOpen] = useState(false);
-  const [hasilAkhir, setHasilAkhir] = useState<any[]>([]);
-
-  const [preferensi, setPreferensi] = useState({
+  const [hasilAkhir, setHasilAkhir] = useState<TipeKos[]>([]);
+  const [preferensi, setPreferensi] = useState<Preferensi>({
     harga: '',
     jarak: '',
     luas_kamar: '',
@@ -52,6 +74,7 @@ export default function Main() {
 
   useEffect(() => {
     if (!idStore) return;
+
     const simpanFetch = async () => {
       const res = await fetch('/api/simpan/pilih', {
         method: 'POST',
@@ -68,10 +91,14 @@ export default function Main() {
   }, [idStore, fetchTipeKoss, fetchKoss, setAllSavedTipes]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPreferensi({ ...preferensi, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setPreferensi((prev) => ({ ...prev, [name]: value }));
   };
 
-  const tingkatKepentingan: Record<string, number> = {
+  const tingkatKepentingan: Record<
+    (typeof kepentinganOptions)[number],
+    number
+  > = {
     'Sangat Penting': 5,
     Penting: 4,
     Sedang: 3,
@@ -79,28 +106,8 @@ export default function Main() {
     'Sangat Tidak Penting': 1,
   };
 
-  type TipeKos = {
-    id_tipe: string;
-    harga: number;
-    jarak: number;
-    fasilitas_kamar: any;
-    fasilitas_umum: any;
-    keamanan: any;
-    jenis_kos: any;
-    [key: string]: any;
-  };
-
-  const getWeightNumber = (val: string) => tingkatKepentingan[val] ?? 0;
-
-  type Preferensi = {
-    harga: string;
-    jarak: string;
-    luas_kamar: string;
-    fasilitas_kamar: string;
-    fasilitas_umum: string;
-    keamanan: string;
-    jenis_kos: string; // kategorikal
-  };
+  const getWeightNumber = (val: string) =>
+    tingkatKepentingan[val as (typeof kepentinganOptions)[number]] ?? 0;
 
   const getNormalizedWeights = (pref: Preferensi) => {
     const raw = {
@@ -112,35 +119,28 @@ export default function Main() {
       keamanan: getWeightNumber(pref.keamanan),
     };
     const sum = Object.values(raw).reduce((a, b) => a + b, 0) || 1;
-    console.log('input preferensi', raw);
     return Object.fromEntries(
       Object.entries(raw).map(([k, v]) => [k, v / sum])
-    ) as unknown as typeof raw; // semua bobot dijamin sum=1
+    ) as Record<keyof typeof raw, number>;
   };
 
   const EPSILON = 0.1;
-  //parse luas kamar
+
   const parseLuasKamar = (luasStr: string): number => {
-    if (!luasStr) return 0;
     const parts = luasStr.toLowerCase().split('x');
     if (parts.length !== 2) return 0;
-
     const panjang = parseFloat(parts[0].trim());
     const lebar = parseFloat(parts[1].trim());
-
     if (isNaN(panjang) || isNaN(lebar)) return 0;
-
-    return panjang * lebar; // hitung luas
-  };
-  const normalizeBenefit = (value: number, min: number, max: number) => {
-    if (max === min) return 1;
-    return ((value - min) / (max - min)) * (1 - EPSILON) + EPSILON;
+    return panjang * lebar;
   };
 
-  const normalizeCost = (value: number, min: number, max: number) => {
-    if (max === min) return 0.5; // hindari division by zero
-    return ((max - value) / (max - min)) * (1 - EPSILON) + EPSILON;
-  };
+  const normalizeBenefit = (value: number, min: number, max: number) =>
+    max === min ? 1 : ((value - min) / (max - min)) * (1 - EPSILON) + EPSILON;
+
+  const normalizeCost = (value: number, min: number, max: number) =>
+    max === min ? 0.5 : ((max - value) / (max - min)) * (1 - EPSILON) + EPSILON;
+
   const scoringAlternatif = (data: TipeKos[]) => {
     const hargaList = data.map((d) => d.harga);
     const jarakList = data.map((d) => d.jarak);
@@ -148,44 +148,33 @@ export default function Main() {
 
     const minHarga = Math.min(...hargaList);
     const maxHarga = Math.max(...hargaList);
-
     const minJarak = Math.min(...jarakList);
     const maxJarak = Math.max(...jarakList);
-
     const minLuas = Math.min(...luasList);
     const maxLuas = Math.max(...luasList);
 
-    // ---- FASILITAS KAMAR ----
-    const scoreFasilitasKamar = (f: any): number => {
+    const scoreFasilitasKamar = (f: Fasilitas) => {
       const dasar = f.kasur && f.lemari && f.meja && f.kursi;
       if (!dasar) return 0;
-
       if (f.kamar_mandi && f.ac) return 1.0;
       if (f.kamar_mandi && f.kipas_angin) return 0.7;
       if (f.kamar_mandi) return 0.4;
-
-      return 0.1; // hanya fasilitas dasar
+      return 0.1;
     };
 
-    // ---- FASILITAS UMUM ----
-    const scoreFasilitasUmum = (f: any): number => {
-      //bobot kriteria
-
+    const scoreFasilitasUmum = (f: Fasilitas) => {
       const dasar = f.wifi && f.parkir && f.jemuran;
       if (!dasar) return 0;
-
       if (f.ruang_tamu && f.dapur && f.kulkas && f.mesin_cuci && f.locker)
         return 1.0;
       if (f.ruang_tamu && f.dapur && f.kulkas && f.mesin_cuci) return 0.82;
       if (f.ruang_tamu && f.dapur && f.kulkas) return 0.64;
       if (f.ruang_tamu && f.dapur) return 0.46;
       if (f.ruang_tamu) return 0.28;
-
-      return 0.1; // hanya dasar
+      return 0.1;
     };
 
-    // ---- KEAMANAN ----
-    const scoreKeamanan = (f: any): number => {
+    const scoreKeamanan = (f: Fasilitas) => {
       if (f.gerbang && f.cctv && f.penjaga && f.kartu_akses) return 1.0;
       if (f.gerbang && f.cctv && f.penjaga) return 0.7;
       if (f.gerbang && f.cctv) return 0.4;
@@ -193,61 +182,63 @@ export default function Main() {
       return 0.1;
     };
 
-    return data.map((item) => {
-      const luas = parseLuasKamar(item.luas_kamar);
-      return {
-        ...item,
-        luasValue: luas,
-        scoreHarga: normalizeCost(item.harga, minHarga, maxHarga),
-        scoreJarak: normalizeCost(item.jarak, minJarak, maxJarak),
-        scoreLuas: normalizeBenefit(luas, minLuas, maxLuas),
-        scoreFasilitasKamar: scoreFasilitasKamar(item.fasilitas_kamar),
-        scoreFasilitasUmum: scoreFasilitasUmum(item.fasilitas_umum),
-        scoreKeamanan: scoreKeamanan(item.keamanan),
-      };
-    });
+    return data.map((item) => ({
+      ...item,
+      luasValue: parseLuasKamar(item.luas_kamar),
+      scoreHarga: normalizeCost(item.harga, minHarga, maxHarga),
+      scoreJarak: normalizeCost(item.jarak, minJarak, maxJarak),
+      scoreLuas: normalizeBenefit(
+        parseLuasKamar(item.luas_kamar),
+        minLuas,
+        maxLuas
+      ),
+      scoreFasilitasKamar: scoreFasilitasKamar(item.fasilitas_kamar),
+      scoreFasilitasUmum: scoreFasilitasUmum(item.fasilitas_umum),
+      scoreKeamanan: scoreKeamanan(item.keamanan),
+    }));
   };
 
   const hitungTotalScore = (data: TipeKos[], pref: Preferensi) => {
     const w = getNormalizedWeights(pref);
     const scored = scoringAlternatif(data);
 
-    // (opsional) hard filter jenis_kos jika user memilih spesifik
-    const targetJenis = pref.jenis_kos?.toLowerCase();
-    const filterJenis = (jk: string) => {
-      if (!targetJenis || targetJenis === 'campur') return true;
-      return jk.toLowerCase() === targetJenis;
-    };
-    console.log('w preferensi', w);
-
-    // .filter((a) => filterJenis(a.jenis_kos))
     return scored
-      .map((a) => {
-        const totalScore =
+      .map((a) => ({
+        ...a,
+        totalScore:
           w.harga * a.scoreHarga +
           w.jarak * a.scoreJarak +
           w.luas_kamar * a.scoreLuas +
           w.fasilitas_kamar * a.scoreFasilitasKamar +
           w.fasilitas_umum * a.scoreFasilitasUmum +
-          w.keamanan * a.scoreKeamanan;
-
-        return { ...a, totalScore };
-      })
-      .sort((x, y) => y.totalScore - x.totalScore); // ranking desc
+          w.keamanan * a.scoreKeamanan,
+      }))
+      .sort((x, y) => y.totalScore - x.totalScore);
   };
 
-  const handlePreference = async (e: React.FormEvent) => {
+  const handlePreference = (e: React.FormEvent) => {
     e.preventDefault();
+    // parse JSON string menjadi object Fasilitas
+    const parseTipeKosStore = TipeKosStore.map((t) => ({
+      ...t,
+      fasilitas_kamar:
+        typeof t.fasilitas_kamar === 'string'
+          ? JSON.parse(t.fasilitas_kamar)
+          : t.fasilitas_kamar,
+      fasilitas_umum:
+        typeof t.fasilitas_umum === 'string'
+          ? JSON.parse(t.fasilitas_umum)
+          : t.fasilitas_umum,
+      keamanan:
+        typeof t.keamanan === 'string' ? JSON.parse(t.keamanan) : t.keamanan,
+    }));
 
-    const ranking = hitungTotalScore(TipeKosStore, preferensi);
-    const filteredTipeKos = ranking.filter(
-      (item) => item.jenis_kos === preferensi.jenis_kos
-    );
-    if (preferensi.jenis_kos == 'semua') {
-      setHasilAkhir(ranking);
-    } else {
-      setHasilAkhir(filteredTipeKos);
-    }
+    const ranking = hitungTotalScore(parseTipeKosStore, preferensi);
+    if (preferensi.jenis_kos === 'semua') setHasilAkhir(ranking);
+    else
+      setHasilAkhir(
+        ranking.filter((item) => item.jenis_kos === preferensi.jenis_kos)
+      );
     setVisibleCount(3);
   };
 
@@ -255,10 +246,7 @@ export default function Main() {
     const res = await fetch('/api/simpan', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id_tipe,
-        id_user: idStore,
-      }),
+      body: JSON.stringify({ id_tipe, id_user: idStore }),
     });
     const newSaved: SavedTipe = await res.json();
     addSavedTipe(newSaved);
@@ -272,14 +260,13 @@ export default function Main() {
     });
     removeSavedTipe(id_tipe);
   };
-  const handleDetail = async (id_tipe: string) => {
-    setSelectedId_Tipe(id_tipe);
-    setOpenModal('detail');
-  };
 
   const [openModal, setOpenModal] = useState<null | 'detail'>(null);
   const handleClose = () => setOpenModal(null);
-
+  const handleDetail = (id_tipe: string) => {
+    setSelectedId_Tipe(id_tipe);
+    setOpenModal('detail');
+  };
   return (
     <div className="w-full flex flex-col items-center">
       {/* Header */}
@@ -493,11 +480,8 @@ export default function Main() {
       </div>
       {/* Modal */}
       <Modal isOpen={openModal !== null} onClose={handleClose}>
-        {openModal === 'detail' && (
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Detail Kos</h2>
-            <Detail id_tipe={selectedId_Tipe} onSuccess={handleClose} />
-          </div>
+        {openModal === 'detail' && selectedId_Tipe && (
+          <Detail id_tipe={selectedId_Tipe} onSuccess={handleClose} />
         )}
       </Modal>
     </div>

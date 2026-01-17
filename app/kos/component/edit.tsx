@@ -1,7 +1,6 @@
 'use client';
-import { stat } from 'fs';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+
+import { useState } from 'react';
 type EditProps = {
   id_tipe: string;
   id_kos: string;
@@ -72,7 +71,7 @@ export default function Edit({
   const [jam_malamKos, setJam_malam] = useState(jam_malam);
   const [jmlh_kamarKos, setJmlh_kamar] = useState(jmlh_kamar);
   const [kmr_terisiKos, setKmr_terisi] = useState(kmr_terisi);
-  const [statusKos, setStatus] = useState(status);
+  const [statusKos] = useState(status);
   const [loading, setLoading] = useState(false);
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -112,9 +111,6 @@ export default function Edit({
     }
   };
 
-  const handleCheckbox = (setState: any, prevState: any, key: string) => {
-    setState({ ...prevState, [key]: !prevState[key] });
-  };
   return (
     <div className="flex flex-col justify-start items-center">
       <div className="space-y-4">

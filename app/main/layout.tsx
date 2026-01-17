@@ -1,4 +1,4 @@
-import { Sidebar } from '../kos/component/Sidebar';
+import { Sidebar } from './component/Sidebar';
 
 export default function KosLayout({ children }: { children: React.ReactNode }) {
   return (

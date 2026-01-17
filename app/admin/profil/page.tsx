@@ -1,9 +1,11 @@
 'use client';
+
 import { useState, useEffect } from 'react';
 import { Eye, EyeOff, Edit3, Save, X } from 'lucide-react';
 import { useIdStore } from '@/store/useDataStore';
 
 type Admin = {
+  id_admin: string;
   email: string;
   password: string;
 };
@@ -13,34 +15,43 @@ export default function ProfilPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { idStore } = useIdStore();
-  const [form, setForm] = useState<Admin>({
+
+  const [form, setForm] = useState<Omit<Admin, 'id_admin'>>({
     email: '',
     password: '',
   });
 
   useEffect(() => {
-    // Fetch data user (dummy sementara, ganti dengan fetch API Anda)
     if (!idStore) return;
+
     const fetchUser = async () => {
       const res = await fetch('/api/admin');
-      const data = await res.json();
-      const filtUser = await data.find(
-        (item: any) => item.id_admin === idStore
-      );
+      const data: Admin[] = await res.json();
 
-      console.log('filter user', data);
-      console.log('id user', idStore);
+      const filtUser = data.find((item) => item.id_admin === idStore);
+
+      if (!filtUser) return;
+
       setUser(filtUser);
-      setForm(filtUser);
+      setForm({
+        email: filtUser.email,
+        password: filtUser.password,
+      });
     };
+
     fetchUser();
   }, [idStore]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
   };
 
   const handleSave = async () => {
+    if (!idStore) return;
+
     await fetch('/api/admin', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -51,18 +62,19 @@ export default function ProfilPage() {
       }),
     });
 
-    console.log('Data tersimpan:', form);
-    setUser(form);
+    setUser({
+      id_admin: idStore,
+      email: form.email,
+      password: form.password,
+    });
+
     setIsEditing(false);
   };
-  console.log('user', user?.email);
 
   return (
     <div className="w-full">
       <div className="w-3/6 mx-auto p-6">
-        <h1 className="text-2xl font-bold text-slate-700 mb-6">
-          Profil Pemilik Kos
-        </h1>
+        <h1 className="text-2xl font-bold text-slate-700 mb-6">Profil Admin</h1>
 
         <div className="bg-white shadow-xl rounded-2xl p-6 space-y-6 border">
           {/* Email */}
@@ -74,7 +86,7 @@ export default function ProfilPage() {
                 name="email"
                 value={form.email}
                 onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none text-gray-700"
+                className="w-full border rounded-lg px-3 py-2"
               />
             ) : (
               <p className="text-lg font-medium text-gray-800">{user?.email}</p>
@@ -91,13 +103,12 @@ export default function ProfilPage() {
                   name="password"
                   value={form.password}
                   onChange={handleChange}
-                  className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-400 outline-none text-gray-700"
+                  className="w-full border rounded-lg px-3 py-2"
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-500 hover:text-gray-700">
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
             ) : (
@@ -107,33 +118,32 @@ export default function ProfilPage() {
                 </p>
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="text-gray-500 hover:text-gray-700">
-                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff /> : <Eye />}
                 </button>
               </div>
             )}
           </div>
 
-          {/* Tombol Aksi */}
+          {/* Action */}
           <div className="flex justify-end gap-3">
             {isEditing ? (
               <>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="flex items-center gap-1 px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+                  className="px-4 py-2 bg-gray-200 rounded-lg">
                   <X size={18} /> Batal
                 </button>
                 <button
                   onClick={handleSave}
-                  className="flex items-center gap-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg">
                   <Save size={18} /> Simpan
                 </button>
               </>
             ) : (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg">
                 <Edit3 size={18} /> Edit Profil
               </button>
             )}

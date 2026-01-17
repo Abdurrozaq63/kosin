@@ -16,18 +16,35 @@ export default function ProfilPage() {
   const { idStore } = useIdStore();
   const [form, setForm] = useState<User>({ nama: '', email: '', password: '' });
 
+  type UserFromAPI = {
+    [x: string]: any;
+    id_user: string;
+    nama: string;
+    email: string;
+    password: string;
+  };
+
   useEffect(() => {
     // Fetch data user (dummy sementara, ganti dengan fetch API Anda)
     if (!idStore) return;
     const fetchUser = async () => {
       const res = await fetch('/api/user');
-      const data = await res.json();
-      const filtUser = data.find((item: any) => item.id_user === idStore);
-
-      console.log('filter user', filtUser);
-      console.log('id user', idStore);
-      setUser(filtUser);
-      setForm(filtUser);
+      const data: UserFromAPI = await res.json();
+      const filtUser = data.find(
+        (item: { id_user: string }) => item.id_user === idStore
+      );
+      if (filtUser) {
+        setUser({
+          nama: filtUser.nama,
+          email: filtUser.email,
+          password: filtUser.password,
+        });
+        setForm({
+          nama: filtUser.nama,
+          email: filtUser.email,
+          password: filtUser.password,
+        });
+      }
     };
     fetchUser();
     console.log('idUser', idStore);

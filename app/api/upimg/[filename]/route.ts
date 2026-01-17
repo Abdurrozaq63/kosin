@@ -5,8 +5,10 @@ import { NextRequest } from 'next/server';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { filename: string } }
+  { params }: { params: Promise<{ filename: string }> }
 ) {
+  const { filename } = await params;
+
   const directoryPath = path.resolve('.', 'uploads');
 
   if (!fs.existsSync(directoryPath)) {
@@ -16,7 +18,7 @@ export async function GET(
   }
 
   const files = fs.readdirSync(directoryPath);
-  const matchedFile = files.find((file) => file.startsWith(params.filename));
+  const matchedFile = files.find((file) => file.startsWith(filename));
 
   if (!matchedFile) {
     return new Response(JSON.stringify({ message: 'File not found' }), {
@@ -25,10 +27,13 @@ export async function GET(
   }
 
   const filePath = path.join(directoryPath, matchedFile);
-  const fileBuffer = fs.readFileSync(filePath);
+  const buffer = fs.readFileSync(filePath);
   const contentType = mime.lookup(filePath) || 'application/octet-stream';
 
-  return new Response(fileBuffer, {
-    headers: { 'Content-Type': contentType },
+  // ✅ Buffer → Uint8Array (wajib untuk Response)
+  return new Response(new Uint8Array(buffer), {
+    headers: {
+      'Content-Type': contentType,
+    },
   });
 }

@@ -126,7 +126,7 @@ type TipeKosStore = {
   jenis_kos: string;
   harga: number;
   jarak: number;
-  luas_kamar: number;
+  luas_kamar: string;
   fasilitas_kamar: string;
   fasilitas_umum: string;
   keamanan: string;

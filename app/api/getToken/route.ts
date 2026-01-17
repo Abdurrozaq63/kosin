@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     );
     const decoded = payload as JwtPayload;
     return NextResponse.json(decoded);
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
   }
 }

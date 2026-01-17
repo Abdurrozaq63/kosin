@@ -1,21 +1,28 @@
 'use client';
 import { useEffect, useState } from 'react';
-import {
-  useTipeKos,
-  useKos,
-  useIdStore,
-  useSavedTipes,
-} from '@/store/useDataStore';
+import { useKos, useIdStore, useSavedTipes } from '@/store/useDataStore';
 import Modal from '@/app/kos/component/modal';
 import BatalSimpan from './batalsimpan';
 import Detail from '../component/detail';
 import { MapPin } from 'lucide-react';
 
+type KosSimpanData = {
+  id_tipe: string;
+  id_kos: string;
+  nama_tipe: string;
+  jenis_kos: string;
+  jarak: number;
+  luas_kamar: string;
+  harga: number;
+  simpan: { id_simpan: string }[];
+};
+
 export default function Simpan() {
   const { KosStore } = useKos();
   const { idStore } = useIdStore();
   const { removeSavedTipe } = useSavedTipes();
-  const [kosSimpan, setKosSimpan] = useState<any[]>([]);
+
+  const [kosSimpan, setKosSimpan] = useState<KosSimpanData[]>([]);
   const [selectedId_simpan, setSelectedId_simpan] = useState<string | null>(
     null
   );
@@ -24,10 +31,6 @@ export default function Simpan() {
     null
   );
 
-  useEffect(() => {
-    fetchRelasiSimpan();
-  }, [idStore]);
-
   const fetchRelasiSimpan = async () => {
     if (!idStore) return;
     const res = await fetch('/api/simpan/relasiSimpan', {
@@ -35,9 +38,13 @@ export default function Simpan() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: idStore }),
     });
-    const data = await res.json();
+    const data: KosSimpanData[] = await res.json();
     setKosSimpan(data);
   };
+
+  useEffect(() => {
+    if (idStore) fetchRelasiSimpan();
+  }, [idStore]);
 
   const handleBatalSimpan = (id_simpan: string, id_tipe: string) => {
     setSelectedId_simpan(id_simpan);
@@ -54,7 +61,7 @@ export default function Simpan() {
   const handleClose = () => setOpenModal(null);
 
   return (
-    <div className=" w-full flex flex-col items-center">
+    <div className="w-full flex flex-col items-center">
       {/* Header */}
       <div className="w-full p-4 text-center mt-2">
         <h1 className="text-slate-700 text-start ml-6 text-2xl font-bold tracking-wide">
@@ -69,23 +76,20 @@ export default function Simpan() {
             Tidak ada kos yang disimpan
           </p>
         ) : (
-          kosSimpan.map((kos, index) => {
+          kosSimpan.map((kos) => {
             const koss = KosStore.find((k) => k.id_kos === kos.id_kos);
 
             return (
               <div
-                key={index}
+                key={kos.id_tipe}
                 className="w-full rounded-2xl shadow-md bg-white p-5 flex flex-col md:flex-row gap-6 mt-5 hover:shadow-lg transition-shadow">
                 {/* Gambar */}
                 <div className="relative w-96 aspect-[5/3] bg-gray-200 rounded-xl overflow-hidden">
-                  {/* Background blur */}
                   <img
                     src={`/api/upimg/${kos.nama_tipe + kos.id_kos}`}
                     alt="Background Blur"
                     className="absolute inset-0 w-full h-full object-cover blur-sm scale-110"
                   />
-
-                  {/* Gambar utama */}
                   <div className="absolute inset-0 flex items-center justify-center">
                     <img
                       src={`/api/upimg/${kos.nama_tipe + kos.id_kos}`}
@@ -116,13 +120,11 @@ export default function Simpan() {
                       <p className="font-semibold text-slate-700 mt-2">
                         Lokasi
                       </p>
-
                       <a
                         href={koss?.alamat}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sky-500 flex justify-start items-center cursor-pointer">
-                        {' '}
                         <MapPin className="w-4 h-4 text-slate-500 mr-2" />
                         Lihat Map
                       </a>
@@ -137,7 +139,7 @@ export default function Simpan() {
                         Jarak Kampus
                       </p>
                       <span className="bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full text-sm">
-                        {kos.jarak}
+                        {kos.jarak} m
                       </span>
 
                       <p className="font-semibold text-slate-700 mt-2">
@@ -147,7 +149,7 @@ export default function Simpan() {
 
                       <p className="font-semibold text-slate-700 mt-2">Harga</p>
                       <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-sm font-medium">
-                        Rp {kos.harga}
+                        Rp {kos.harga.toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -177,10 +179,7 @@ export default function Simpan() {
       {/* Modal */}
       <Modal isOpen={openModal !== null} onClose={handleClose}>
         {openModal === 'detail' && (
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Detail Kos</h2>
-            <Detail id_tipe={selectedId_Tipe} onSuccess={handleClose} />
-          </div>
+          <Detail id_tipe={selectedId_Tipe} onSuccess={handleClose} />
         )}
         {openModal === 'BatalSimpan' && (
           <BatalSimpan

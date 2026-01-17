@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Home, Search, Users, Shield } from 'lucide-react';
+import { Home, Search, Users } from 'lucide-react';
 
 export default function LandingPage() {
   return (
